@@ -143,7 +143,7 @@ namespace DouYu
             //判断登陆成功
             await ReceiveLenSizeAsync(_socket, 4, _lenBuff);
             var receiveLen = BitConverter.ToInt32(_lenBuff, 0);
-            ReceiveContentSize(_socket, receiveLen, _conttentBuff);
+            await ReceiveContentSize(_socket, receiveLen, _conttentBuff);
             var resstr = Encoding.UTF8.GetString(_conttentBuff, 8, receiveLen - 9);
 
             //加入组
@@ -166,7 +166,7 @@ namespace DouYu
                 //只抓取弹幕消息，其他消息不管
                 await ReceiveLenSizeAsync(_socket, 4, _lenBuff);
                 receiveLen = BitConverter.ToInt32(_lenBuff, 0);
-                ReceiveContentSize(_socket, receiveLen, _conttentBuff);
+                await ReceiveContentSize(_socket, receiveLen, _conttentBuff);
                 resstr = Encoding.UTF8.GetString(_conttentBuff, 8, receiveLen - 9);
                 if (resstr.Contains("type@=chatmsg"))
                 {
@@ -243,7 +243,7 @@ namespace DouYu
                 }
                 };
                 await _socket.SendAsync(new ArraySegment<byte>(dmJoin.Serialize()), WebSocketMessageType.Binary, true, CancellationToken.None);
-                await _socket.CloseAsync(WebSocketCloseStatus.Empty, "end", CancellationToken.None);
+                await _socket.CloseOutputAsync(WebSocketCloseStatus.Empty, null, CancellationToken.None);
                 _socket.Dispose();
                 btnConnect.Enabled = true;
                 btnClose.Enabled = false;
