@@ -118,9 +118,9 @@ namespace DouYu
 
             while (!isStop)
             {
+                await Task.Delay(TimeSpan.FromSeconds(40));
                 await _socket.SendAsync(new ArraySegment<byte>(heartbuf), WebSocketMessageType.Binary, false, CancellationToken.None);
                 tblogs.Clear();
-                await Task.Delay(TimeSpan.FromSeconds(40));
             }
         }
 
