@@ -163,45 +163,55 @@ namespace DouYu
             //接受弹幕消息
             while (!isStop)
             {
-                //只抓取弹幕消息，其他消息不管
-                await ReceiveLenSizeAsync(_socket, 4, _lenBuff);
-                receiveLen = BitConverter.ToInt32(_lenBuff, 0);
-                await ReceiveContentSize(_socket, receiveLen, _conttentBuff);
-                resstr = Encoding.UTF8.GetString(_conttentBuff, 8, receiveLen - 9);
-                if (resstr.Contains("type@=chatmsg"))
+                try
                 {
-                    //格式: type@=chatmsg/rid@=301712/gid@=-9999/uid@=123456/nn@=test/txt@=666/level@=1/ 不止这些
-                    var tokens = resstr.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                    StringBuilder sb = new StringBuilder();
-                    string name = "";
-                    string level = "";
-                    string txt = "";
-                    foreach (var token in tokens)
+                    //只抓取弹幕消息，其他消息不管
+                    await ReceiveLenSizeAsync(_socket, 4, _lenBuff);
+                    receiveLen = BitConverter.ToInt32(_lenBuff, 0);
+                    await ReceiveContentSize(_socket, receiveLen, _conttentBuff);
+                    resstr = Encoding.UTF8.GetString(_conttentBuff, 8, receiveLen - 9);
+                    if (resstr.Contains("type@=chatmsg"))
                     {
-                        //nn 
-                        //发送者昵称
-                        //txt
-                        //弹幕文本内容 
-                        //level
-                        //用户等级
-                        if (token.StartsWith("nn@="))
+                        //格式: type@=chatmsg/rid@=301712/gid@=-9999/uid@=123456/nn@=test/txt@=666/level@=1/ 不止这些
+                        var tokens = resstr.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                        StringBuilder sb = new StringBuilder();
+                        string name = "";
+                        string level = "";
+                        string txt = "";
+                        foreach (var token in tokens)
                         {
-                            name = token.Substring(4);
+                            //nn 
+                            //发送者昵称
+                            //txt
+                            //弹幕文本内容 
+                            //level
+                            //用户等级
+                            if (token.StartsWith("nn@="))
+                            {
+                                name = token.Substring(4);
+                            }
+                            if (token.StartsWith("txt@="))
+                            {
+                                txt = token.Substring(5);
+                            }
+                            if (token.StartsWith("level@="))
+                            {
+                                level = token.Substring(7);
+                            }
                         }
-                        if (token.StartsWith("txt@="))
+                        sb.Append($"{name}({level}):{txt}\r\n\r\n");
+                        tblogs.Invoke((Action<StringBuilder>)(prop =>
                         {
-                            txt = token.Substring(5);
-                        }
-                        if (token.StartsWith("level@="))
-                        {
-                            level = token.Substring(7);
-                        }
+                            tblogs.AppendText(sb.ToString());
+                        }), sb);
                     }
-                    sb.Append($"{name}({level}):{txt}\r\n\r\n");
-                    tblogs.Invoke((Action<StringBuilder>)(prop =>
+                }
+                catch (Exception ex)
+                {
+                    if (_socket.State == WebSocketState.Open)
                     {
-                        tblogs.AppendText(sb.ToString());
-                    }), sb);
+                        MessageBox.Show(ex.Message + ex.StackTrace);
+                    }           
                 }
             }
         }
