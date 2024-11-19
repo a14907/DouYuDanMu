@@ -120,7 +120,10 @@ namespace DouYu
             {
                 await Task.Delay(TimeSpan.FromSeconds(40));
                 await _socket.SendAsync(new ArraySegment<byte>(heartbuf), WebSocketMessageType.Binary, false, CancellationToken.None);
-                tblogs.Clear();
+                if (tblogs.Text.Length > 100000)
+                {
+                    tblogs.Clear();
+                }                
             }
         }
 
@@ -211,7 +214,7 @@ namespace DouYu
                     if (_socket.State == WebSocketState.Open)
                     {
                         MessageBox.Show(ex.Message + ex.StackTrace);
-                    }           
+                    }
                 }
             }
         }
