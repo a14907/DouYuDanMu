@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -120,10 +121,10 @@ namespace DouYu
             {
                 await Task.Delay(TimeSpan.FromSeconds(40));
                 await _socket.SendAsync(new ArraySegment<byte>(heartbuf), WebSocketMessageType.Binary, false, CancellationToken.None);
-                if (tblogs.Text.Length > 100000)
+                if (tblogs.Text.Length > 1000000)
                 {
                     tblogs.Clear();
-                }                
+                }
             }
         }
 
@@ -173,6 +174,9 @@ namespace DouYu
                     receiveLen = BitConverter.ToInt32(_lenBuff, 0);
                     await ReceiveContentSize(_socket, receiveLen, _conttentBuff);
                     resstr = Encoding.UTF8.GetString(_conttentBuff, 8, receiveLen - 9);
+
+                    Debug.WriteLine("接收到：" + resstr);
+
                     if (resstr.Contains("type@=chatmsg"))
                     {
                         //格式: type@=chatmsg/rid@=301712/gid@=-9999/uid@=123456/nn@=test/txt@=666/level@=1/ 不止这些
@@ -202,11 +206,18 @@ namespace DouYu
                                 level = token.Substring(7);
                             }
                         }
-                        sb.Append($"{name}({level}):{txt}\r\n\r\n");
+                        sb.Append($"{name}({level}):{txt}\r\n");
                         tblogs.Invoke((Action<StringBuilder>)(prop =>
                         {
                             tblogs.AppendText(sb.ToString());
                         }), sb);
+                    }
+                    else
+                    {
+                        //tblogs.Invoke((Action)delegate
+                        //{
+                        //    tblogs.AppendText($"{resstr}\r\n");
+                        //});
                     }
                 }
                 catch (Exception ex)
